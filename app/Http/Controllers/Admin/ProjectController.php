@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 
 use App\Models\Project;
+use App\Models\Type;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProjectController extends Controller
 {
@@ -17,7 +20,7 @@ class ProjectController extends Controller
         $projectList = Project::all();
 
         $data = [
-            "projectsList" =>$projectList,
+            "projectsList" => $projectList,
         ];
         // stampiamo tutto in una vista 
         return view('admin.index', $data);
@@ -28,7 +31,13 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        return view('admin.create');
+        $types = Type::all();
+
+        $data = [
+            'types' => $types,
+        ];
+
+        return view('admin.create', $data);
     }
 
     /**
@@ -39,8 +48,14 @@ class ProjectController extends Controller
         $data = $request->validate([
             "title" => "required|min:3|max:255",
             "description" => "required|min:3",
-            "img" => "required"
+            "img" => "required",
+            "type_id" => "required",
         ]);
+
+        if ($request->has('img')) {
+            $img_path = Storage::put('uploads', $request->img);
+            $data['img'] = $img_path;
+        }
 
         $newProject = new Project();
         $newProject->fill($data);
@@ -64,10 +79,14 @@ class ProjectController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Project $project)
+    public function edit(Project $project, Type $type)
     {
+        $types = Type::all();
+
         $data = [
-            "project" => $project
+            "project" => $project,
+            "type" => $type,
+            "types" => $types,
         ];
 
         return view('admin.edit', $data);
@@ -82,7 +101,19 @@ class ProjectController extends Controller
             "title" => "required|min:3|max:255",
             "description" => "required|min:3",
             "img" => "required",
+            "type_id" => "required",
         ]);
+
+        if ($request->has('img')) {
+            $img_path = Storage::put('uploads', $request->img);
+            $data['img'] = $img_path;
+
+            if ($project->img && !Str::startsWith($project->img, 'http')) {
+                Storage::delete($project->img);
+            }
+        }
+
+        // Storage::delete($project->img);
 
         $project->update($data);
 
@@ -94,6 +125,7 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
+        Storage::delete($project->img);
         $project->delete();
         return redirect()->route('admin.projects.index');
     }

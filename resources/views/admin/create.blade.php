@@ -5,7 +5,7 @@
         <div class="row">
             <div class="col-12">
                 <h1>Crea un nuovo progetto</h1>
-                <form method="POST" action="{{ route('admin.projects.store') }}">
+                <form method="POST" action="{{ route('admin.projects.store') }}" enctype="multipart/form-data">
                     @csrf
 
                     <div class="mb-3">
@@ -21,9 +21,17 @@
 
                     <div class="mb-3">
                         <label for="exampleFormControlInput1" class="form-label">Image</label>
-                        <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Image"
+                        <input type="file" class="form-control" id="exampleFormControlInput1" placeholder="Image"
                             name="img">
                     </div>
+
+                    <select class="form-select mb-3" aria-label="Default select example" name="type_id">
+                        <option selected>Open this select menu</option>
+                        @foreach ($types as $item)
+                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                        @endforeach
+
+                    </select>
 
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
